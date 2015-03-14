@@ -7,18 +7,41 @@ output:
 
 
 ## Loading and preprocessing the data
-
+```{r load}
+library(dplyr)
+data <- read.csv("activity.csv")
+data$time.interval <- sapply(data$interval, function(e) { m <- e; h <- 0; if(e >= 100) { m <- e %% 100; h <- e %/% 100; }; sprintf("%02d:%02d", h, m) })
+data$interval <- sapply(data$interval, function(e) { m <- e; h <- 0; if(e >= 100) { m <- e %% 100; h <- e %/% 100; }; h * 60 + m })
+stats <- data %>% group_by(date) %>% summarise(total.steps = sum(steps, na.rm = TRUE), mean.steps = mean(steps, na.rm = TRUE))
+```
 
 
 ## What is mean total number of steps taken per day?
-
-
+```{r steps-per-day}
+hist(stats$total.steps, main = "Total Steps Per Day", breaks = 10, ylab = "Steps", xlab = "Date")
+summary(stats$total.steps)
+```
 
 ## What is the average daily activity pattern?
-
+```{r average-daily-pattern}
+plot(data %>% group_by(interval) %>% summarise(interval.mean = mean(steps, na.rm = TRUE)), type = "l", main = "Average Daily 24-hour Activity Pattern", ylab = "Interval Mean", xlab = "Time of Day")
+```
 
 
 ## Imputing missing values
+There are `r sum(as.integer(is.na(data$steps)))` NAs out of `r nrow(data)` observations in the activity dataset.
+
+```{r}
+interval.median <- data %>% group_by(interval) %>% summarise(interval.median = median(steps, na.rm = TRUE))
+
+imputed.data <- merge(data, interval.median)
+
+imputed.data$steps[is.na(imputed.data$steps)] <- imputed.data$interval.median[is.na(imputed.data$steps)]
+imputed.data$interval.median <- NULL
+```
+
+There are `r sum(as.integer(is.na(imputed.data$steps)))` NAs out of `r nrow(imputed.data)` observations in the imputed activity dataset.
+
 
 
 
