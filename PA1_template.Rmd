@@ -15,7 +15,6 @@ data$interval <- sapply(data$interval, function(e) { m <- e; h <- 0; if(e >= 100
 stats <- data %>% group_by(date) %>% summarise(total.steps = sum(steps, na.rm = TRUE), mean.steps = mean(steps, na.rm = TRUE))
 ```
 
-
 ## What is mean total number of steps taken per day?
 ```{r steps-per-day}
 hist(stats$total.steps, main = "Total Steps Per Day", breaks = 10, ylab = "Steps", xlab = "Date")
@@ -32,17 +31,31 @@ plot(data %>% group_by(interval) %>% summarise(interval.mean = mean(steps, na.rm
 There are `r sum(as.integer(is.na(data$steps)))` NAs out of `r nrow(data)` observations in the activity dataset.
 
 ```{r}
-interval.median <- data %>% group_by(interval) %>% summarise(interval.median = median(steps, na.rm = TRUE))
+interval.mean <- data %>% group_by(interval) %>% summarise(interval.mean = mean(steps, na.rm = TRUE))
 
-imputed.data <- merge(data, interval.median)
+imputed.data <- merge(data, interval.mean)
 
-imputed.data$steps[is.na(imputed.data$steps)] <- imputed.data$interval.median[is.na(imputed.data$steps)]
-imputed.data$interval.median <- NULL
+NAs <- is.na(imputed.data$steps)
+imputed.data$steps[NAs] <- imputed.data$interval.mean[NAs]
+imputed.data$interval.mean <- NULL
 ```
 
 There are `r sum(as.integer(is.na(imputed.data$steps)))` NAs out of `r nrow(imputed.data)` observations in the imputed activity dataset.
 
+```{r imputed-steps-per-day}
+imputed.stats <- imputed.data %>% group_by(date) %>% summarise(total.steps = sum(steps, na.rm = TRUE), mean.steps = mean(steps, na.rm = TRUE))
+hist(imputed.stats$total.steps, main = "Total Steps Per Day (imputed)", breaks = 10, ylab = "Steps", xlab = "Date")
+summary(imputed.stats$total.steps)
 
+```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r weekdays-weekend}
+library(timeDate)
+weekend <- isWeekend(imputed.data$date)
+par(mfrow = c(2, 1))
+plot(data[weekend,] %>% group_by(interval) %>% summarise(interval.mean = mean(steps, na.rm = TRUE)), type = "l", main = "Weekend", ylab = "Interval Mean", xlab = "Time of Day")
+plot(data[!weekend,] %>% group_by(interval) %>% summarise(interval.mean = mean(steps, na.rm = TRUE)), type = "l", main = "Weekday", ylab = "Interval Mean", xlab = "Time of Day")
+```
+
