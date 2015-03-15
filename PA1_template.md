@@ -86,14 +86,29 @@ summary(imputed.stats$total.steps)
 ##      41    9819   10770   10770   12810   21190
 ```
 
-
 ## Are there differences in activity patterns between weekdays and weekends?
 
 ```r
 library(timeDate)
 weekend <- isWeekend(imputed.data$date)
+#
+# Meet requirement to add weekend weekday two-value factor to the
+# dataset. Useful if using lattice to plot.
+#
+imputed.data$weekday.weekend <- weekend
+imputed.data$weekday.weekend <- sapply(imputed.data$weekday.weekend, function(e) {
+  if(e == TRUE) {
+    as.factor("weekend")
+  } else {
+    as.factor("weekday")
+  }
+})
+#
+# Generate table. Instructions allow for us to use any plotting system. So am
+# using standard plot and don't really need the factor column just created above.
+#
 par(mfrow = c(2, 1))
-plot(data[weekend,] %>% group_by(interval) %>% summarise(interval.mean = mean(steps, na.rm = TRUE)), type = "l", main = "Weekend", ylab = "Number of Stepsn", xlab = "Interval")
+plot(data[weekend,] %>% group_by(interval) %>% summarise(interval.mean = mean(steps, na.rm = TRUE)), type = "l", main = "Weekend", ylab = "Number of Steps", xlab = "Interval")
 plot(data[!weekend,] %>% group_by(interval) %>% summarise(interval.mean = mean(steps, na.rm = TRUE)), type = "l", main = "Weekday", ylab = "Number of Steps", xlab = "Interval")
 ```
 
